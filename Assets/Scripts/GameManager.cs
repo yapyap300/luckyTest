@@ -9,11 +9,6 @@ public class GameManager : Singleton<GameManager>
     private float remainingTime;
     private bool isGameActive = false;
 
-    protected override void Awake()
-    {
-        base.Awake();
-        mapGenerater = GetComponent<MakeMap>();
-    }
     void Start()
     {
         StartGame();
@@ -41,9 +36,6 @@ public class GameManager : Singleton<GameManager>
         currentScore = 0;
         remainingTime = gameTime;
         isGameActive = true;
-        
-        // 맵 생성
-        mapGenerater.GenerateMap();
         
         // UI 초기화
         UIManager.Instance.UpdateScoreUI(currentScore);

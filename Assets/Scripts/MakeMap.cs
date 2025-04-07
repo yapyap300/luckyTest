@@ -3,11 +3,6 @@ using UnityEngine.Tilemaps;
 
 public class MakeMap : MonoBehaviour
 {
-    [Header("타일맵 설정")]
-    public Tilemap tilemap;
-    public Tile wallTile;
-    public Tile floorTile;
-
     [Header("맵 설정")]
     public int width = 50;
     public int height = 50;
@@ -26,11 +21,22 @@ public class MakeMap : MonoBehaviour
     public bool useRandomSeed = true;
     public string seed;
 
+    // 맵 데이터 (0: 벽, 1: 바닥)
     private int[,] map;
 
+    // 맵 데이터를 외부에서 접근할 수 있도록 프로퍼티 추가
+    public int[,] MapData => map;
+
+    // 맵 생성 이벤트
+    public delegate void MapGeneratedEvent(int[,] mapData);
+    public event MapGeneratedEvent OnMapGenerated;
+
+    void Start()
+    {
+        GenerateMap();
+    }
     public void GenerateMap()
     {
-        tilemap.ClearAllTiles();
         map = new int[width, height];
 
         RandomFillMap();
@@ -40,7 +46,8 @@ public class MakeMap : MonoBehaviour
             SmoothMap();
         }
 
-        DrawTiles();
+        // 맵 생성 완료 이벤트 발생
+        OnMapGenerated?.Invoke(map);
     }
 
     private string GenerateRandomSeed()
@@ -60,10 +67,11 @@ public class MakeMap : MonoBehaviour
     {
         if (useRandomSeed)
         {
-            if (seed == null)
-            {
-                seed = GenerateRandomSeed();
-            }
+            // if (seed == null)
+            // {
+            //     seed = GenerateRandomSeed();
+            // }
+            seed = GenerateRandomSeed();
             Random.InitState(seed.GetHashCode());
         }
 
@@ -74,11 +82,11 @@ public class MakeMap : MonoBehaviour
                 // 테두리는 항상 벽으로 설정
                 if (x < borderSize || x >= width - borderSize || y < borderSize || y >= height - borderSize)
                 {
-                    map[x, y] = 1; // 1은 벽
+                    map[x, y] = 0; // 0은 벽
                 }
                 else
                 {
-                    map[x, y] = (Random.Range(0, 100) < fillPercent) ? 1 : 0;
+                    map[x, y] = (Random.Range(0, 100) < fillPercent) ? 0 : 1;
                 }
             }
         }
@@ -95,20 +103,20 @@ public class MakeMap : MonoBehaviour
                 // 테두리는 항상 벽으로 유지
                 if (x < borderSize || x >= width - borderSize || y < borderSize || y >= height - borderSize)
                 {
-                    newMap[x, y] = 1;
+                    newMap[x, y] = 0;
                     continue;
                 }
 
                 int neighborWallCount = GetSurroundingWallCount(x, y);
 
                 // 셀룰러 오토마타 규칙 적용
-                if (map[x, y] == 1) // 현재 벽인 경우
+                if (map[x, y] == 0) // 현재 벽인 경우
                 {
-                    newMap[x, y] = (neighborWallCount < deathLimit) ? 0 : 1;
+                    newMap[x, y] = (neighborWallCount < deathLimit) ? 1 : 0;
                 }
                 else // 현재 바닥인 경우
                 {
-                    newMap[x, y] = (neighborWallCount > birthLimit) ? 1 : 0;
+                    newMap[x, y] = (neighborWallCount > birthLimit) ? 0 : 1;
                 }
             }
         }
@@ -131,7 +139,9 @@ public class MakeMap : MonoBehaviour
                 // 맵 경계 확인
                 if (neighborX >= 0 && neighborX < width && neighborY >= 0 && neighborY < height)
                 {
-                    wallCount += map[neighborX, neighborY];
+                    // 벽(0)인 경우에만 카운트
+                    if (map[neighborX, neighborY] == 0)
+                        wallCount++;
                 }
                 else
                 {
@@ -142,26 +152,6 @@ public class MakeMap : MonoBehaviour
         }
 
         return wallCount;
-    }
-
-    void DrawTiles()
-    {
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                Vector3Int pos = new Vector3Int(x - width / 2, y - height / 2, 0);
-
-                if (map[x, y] == 1)
-                {
-                    tilemap.SetTile(pos, wallTile);
-                }
-                else
-                {
-                    tilemap.SetTile(pos, floorTile);
-                }
-            }
-        }
     }
 
     // 에디터에서 맵 생성 버튼을 위한 메서드
