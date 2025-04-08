@@ -8,7 +8,7 @@ public class TilemapRenderer : MonoBehaviour
     public RuleTile ruleTile;
     
     [Header("타일 타입 설정")]
-    public int tileType = 0; // 0: 벽, 1: 바닥(아이템 배치에도 사용)
+    public TileType tileType = TileType.Wall;
     
     [Header("오프셋 설정")]
     public Vector2Int offset = Vector2Int.zero;
@@ -46,7 +46,7 @@ public class TilemapRenderer : MonoBehaviour
             for (int y = 0; y < height; y++)
             {
                 // 현재 위치의 타일 타입이 이 타일맵의 타일 타입과 일치하는 경우에만 배치
-                if (mapData[x, y] == tileType)
+                if (mapData[x, y] == (int)tileType)
                 {
                     // 월드 좌표 계산 (중앙 기준)
                     Vector3Int pos = new Vector3Int(

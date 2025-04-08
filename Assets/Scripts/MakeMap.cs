@@ -1,6 +1,14 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
+// 타일 타입을 정의하는 enum
+public enum TileType
+{
+    Wall = 0,    // 벽
+    Floor = 1,   // 바닥
+    Item = 2     // 아이템 배치 위치
+}
+
 public class MakeMap : MonoBehaviour
 {
     [Header("맵 설정")]
@@ -21,7 +29,7 @@ public class MakeMap : MonoBehaviour
     public bool useRandomSeed = true;
     public string seed;
 
-    // 맵 데이터 (0: 벽, 1: 바닥)
+    // 맵 데이터 (TileType enum 값으로 저장)
     private int[,] map;
 
     // 맵 데이터를 외부에서 접근할 수 있도록 프로퍼티 추가
@@ -67,11 +75,10 @@ public class MakeMap : MonoBehaviour
     {
         if (useRandomSeed)
         {
-            // if (seed == null)
-            // {
-            //     seed = GenerateRandomSeed();
-            // }
-            seed = GenerateRandomSeed();
+            if (seed == null)
+            {
+                seed = GenerateRandomSeed();
+            }
             Random.InitState(seed.GetHashCode());
         }
 
@@ -82,11 +89,11 @@ public class MakeMap : MonoBehaviour
                 // 테두리는 항상 벽으로 설정
                 if (x < borderSize || x >= width - borderSize || y < borderSize || y >= height - borderSize)
                 {
-                    map[x, y] = 0; // 0은 벽
+                    map[x, y] = (int)TileType.Wall;
                 }
                 else
                 {
-                    map[x, y] = (Random.Range(0, 100) < fillPercent) ? 0 : 1;
+                    map[x, y] = (Random.Range(0, 100) < fillPercent) ? (int)TileType.Wall : (int)TileType.Floor;
                 }
             }
         }
@@ -103,20 +110,20 @@ public class MakeMap : MonoBehaviour
                 // 테두리는 항상 벽으로 유지
                 if (x < borderSize || x >= width - borderSize || y < borderSize || y >= height - borderSize)
                 {
-                    newMap[x, y] = 0;
+                    newMap[x, y] = (int)TileType.Wall;
                     continue;
                 }
 
                 int neighborWallCount = GetSurroundingWallCount(x, y);
 
                 // 셀룰러 오토마타 규칙 적용
-                if (map[x, y] == 0) // 현재 벽인 경우
+                if (map[x, y] == (int)TileType.Wall) // 현재 벽인 경우
                 {
-                    newMap[x, y] = (neighborWallCount < deathLimit) ? 1 : 0;
+                    newMap[x, y] = (neighborWallCount < deathLimit) ? (int)TileType.Floor : (int)TileType.Wall;
                 }
                 else // 현재 바닥인 경우
                 {
-                    newMap[x, y] = (neighborWallCount > birthLimit) ? 0 : 1;
+                    newMap[x, y] = (neighborWallCount > birthLimit) ? (int)TileType.Wall : (int)TileType.Floor;
                 }
             }
         }
@@ -139,8 +146,8 @@ public class MakeMap : MonoBehaviour
                 // 맵 경계 확인
                 if (neighborX >= 0 && neighborX < width && neighborY >= 0 && neighborY < height)
                 {
-                    // 벽(0)인 경우에만 카운트
-                    if (map[neighborX, neighborY] == 0)
+                    // 벽인 경우에만 카운트
+                    if (map[neighborX, neighborY] == (int)TileType.Wall)
                         wallCount++;
                 }
                 else
