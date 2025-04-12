@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public class TilemapRenderer : MonoBehaviour
+public class TilemapDraw : MonoBehaviour
 {
     [Header("타일맵 설정")]
     public Tilemap tilemap;

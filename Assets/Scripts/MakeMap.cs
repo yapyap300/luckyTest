@@ -26,9 +26,6 @@ public class MakeMap : MonoBehaviour
     [Range(0, 8)]
     public int deathLimit = 3;
 
-    public bool useRandomSeed = true;
-    public string seed;
-
     // 맵 데이터 (TileType enum 값으로 저장)
     private int[,] map;
 
@@ -38,11 +35,7 @@ public class MakeMap : MonoBehaviour
     // 맵 생성 이벤트
     public delegate void MapGeneratedEvent(int[,] mapData);
     public event MapGeneratedEvent OnMapGenerated;
-
-    void Start()
-    {
-        GenerateMap();
-    }
+    
     public void GenerateMap()
     {
         map = new int[width, height];
@@ -58,30 +51,8 @@ public class MakeMap : MonoBehaviour
         OnMapGenerated?.Invoke(map);
     }
 
-    private string GenerateRandomSeed()
-    {
-        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        char[] stringChars = new char[10];
-        
-        for (int i = 0; i < stringChars.Length; i++)
-        {
-            stringChars[i] = chars[Random.Range(0, chars.Length)];
-        }
-        
-        return new string(stringChars);
-    }
-
     void RandomFillMap()
     {
-        if (useRandomSeed)
-        {
-            if (seed == null)
-            {
-                seed = GenerateRandomSeed();
-            }
-            Random.InitState(seed.GetHashCode());
-        }
-
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
