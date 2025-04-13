@@ -7,7 +7,6 @@ public class GameManager : Singleton<GameManager>
     [Header("랜덤 시드 설정")]
     public string seed;
     
-    private MakeMap mapGenerater;
     private int currentScore = 0;
     private float remainingTime;
     private bool isGameActive = false;
