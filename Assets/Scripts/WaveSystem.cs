@@ -2,43 +2,47 @@ using UnityEngine;
 using DG.Tweening;
 using UnityEngine.InputSystem;
 using System.Collections;
+using System.Collections.Generic;
+using UnityEngine.Tilemaps;
 
 public class WaveSystem : MonoBehaviour
 {
-    [SerializeField] private float expandDuration = 1f;
-    [SerializeField] private float maxRadius = 5f;
-    [SerializeField] private float initialRadius = 0.1f; // 매우 작은 초기 크기
+    [SerializeField] private float maxRadius;
+    [SerializeField] private float initialRadius;
+    [SerializeField] private float waveDuration;
+    [SerializeField] private float waveEffectDuration;
     
-    private CircleCollider2D waveCollider;
+    // 색상 상수 정의
+    private static readonly Color NORMAL_COLOR = Color.black;
+    private static readonly Color WAVE_COLOR = Color.white;
+    
     private bool isExpanding = false;
     private Vector3 originalScale;
     private Tween currentTween;
     private Camera mainCamera;
+    private float currentRadius = 0f;
+    private float previousRadius = 0f;
+    private Tilemap[] tilemaps;
+    private Dictionary<Vector3Int, Tween> activeTweens = new Dictionary<Vector3Int, Tween>();
+    private CircleCollider2D waveCollider;
 
     private void Start()
     {
-        // 기존에 붙여놓은 콜라이더 참조
-        waveCollider = GetComponent<CircleCollider2D>();
-        
-        // 원래 크기 저장
         originalScale = transform.localScale;
-        
-        // 초기 크기 설정 (매우 작은 점)
         transform.localScale = originalScale * initialRadius;
-        
-        // 메인 카메라 참조
         mainCamera = Camera.main;
+        tilemaps = FindObjectsByType<Tilemap>(FindObjectsSortMode.None);
+        waveCollider = GetComponent<CircleCollider2D>();
     }
 
     public void OnWave(InputAction.CallbackContext context)
     {
+        if (!GameManager.Instance.IsGameActive) return;
+        
         if (context.performed && !isExpanding)
         {
-            // 마우스 위치를 월드 좌표로 변환
             Vector2 mousePosition = Mouse.current.position.ReadValue();
             Vector3 worldPosition = mainCamera.ScreenToWorldPoint(new Vector3(mousePosition.x, mousePosition.y, 10f));
-            
-            // 웨이브 시작 위치 설정
             transform.position = new Vector3(worldPosition.x, worldPosition.y, 0f);
             
             StartExpanding();
@@ -48,8 +52,9 @@ public class WaveSystem : MonoBehaviour
     private void StartExpanding()
     {
         isExpanding = true;
+        currentRadius = initialRadius;
+        previousRadius = initialRadius;
         
-        // 이전 트윈이 있다면 중지
         if (currentTween != null && currentTween.IsActive())
         {
             currentTween.Kill();
@@ -58,13 +63,72 @@ public class WaveSystem : MonoBehaviour
         // Collider 활성화
         waveCollider.enabled = true;
         
-        // 크기 확장 애니메이션 (매우 작은 점에서 목표 크기로)
-        currentTween = transform.DOScale(originalScale * maxRadius, expandDuration)
-            .SetEase(Ease.OutQuad) // 더 자연스러운 확장을 위해 OutQuad 사용
+        currentTween = transform.DOScale(maxRadius, waveDuration)
+            .SetEase(Ease.Linear)
+            .OnUpdate(() => {
+                currentRadius = transform.localScale.x * 0.5f;
+                CheckNewTiles();
+                previousRadius = currentRadius;
+            })
             .OnComplete(() => {
-                // 확장 완료 후 처리
                 OnExpandComplete();
             });
+    }
+
+    private void CheckNewTiles()
+    {
+        foreach (Tilemap tilemap in tilemaps)
+        {
+            Vector3Int centerCell = tilemap.WorldToCell(transform.position);
+            int currentRadiusInt = Mathf.CeilToInt(currentRadius);
+            int previousRadiusInt = Mathf.CeilToInt(previousRadius);
+            
+            // 이전 반경과 현재 반경 사이의 새로운 영역만 검사
+            for (int x = -currentRadiusInt; x <= currentRadiusInt; x++)
+            {
+                for (int y = -currentRadiusInt; y <= currentRadiusInt; y++)
+                {
+                    // 이전 반경 내의 타일은 스킵
+                    if (Mathf.Abs(x) <= previousRadiusInt && Mathf.Abs(y) <= previousRadiusInt)
+                        continue;
+                        
+                    Vector3Int checkPos = centerCell + new Vector3Int(x, y, 0);
+                    Vector3 tilePos = tilemap.GetCellCenterWorld(checkPos);
+                    
+                    float distance = Vector2.Distance(transform.position, tilePos);
+                    
+                    if (distance <= currentRadius)
+                    {
+                        HandleTileInteraction(tilemap, checkPos);
+                    }
+                }
+            }
+        }
+    }
+
+    private void HandleTileInteraction(Tilemap tilemap, Vector3Int tilePosition)
+    {
+        TileBase tile = tilemap.GetTile(tilePosition);
+        if (tile != null)
+        {
+            // 이전 트윈이 있다면 재시작
+            if (activeTweens.ContainsKey(tilePosition))
+            {
+                activeTweens[tilePosition].Restart();
+                return;
+            }
+            
+            // 즉시 하얀색으로 변경
+            tilemap.SetColor(tilePosition, WAVE_COLOR);
+            
+            // 천천히 검은색으로 복귀
+            activeTweens[tilePosition] = DOTween.To(
+                () => WAVE_COLOR,
+                color => tilemap.SetColor(tilePosition, color),
+                NORMAL_COLOR,
+                waveEffectDuration
+            ).SetEase(Ease.InQuad).OnComplete(() => activeTweens.Remove(tilePosition));
+        }
     }
 
     private void OnExpandComplete()
@@ -72,9 +136,20 @@ public class WaveSystem : MonoBehaviour
         // Collider 비활성화
         waveCollider.enabled = false;
         
-        // 원래 크기로 바로 변환 (매우 작은 점으로)
         transform.localScale = originalScale * initialRadius;
-        
         isExpanding = false;
+    }
+    
+    private void OnDestroy()
+    {
+        // 모든 활성 트윈 정리
+        foreach (var tween in activeTweens.Values)
+        {
+            if (tween != null && tween.IsActive())
+            {
+                tween.Kill();
+            }
+        }
+        activeTweens.Clear();
     }
 } 

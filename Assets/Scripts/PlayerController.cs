@@ -17,6 +17,9 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        // 게임이 시작되지 않았다면 움직임 무시
+        if (!GameManager.Instance.IsGameActive) return;
+
         Vector2 newPosition = (Vector2)rb.position + moveInput * moveSpeed * Time.fixedDeltaTime;
         rb.MovePosition(newPosition);
     }

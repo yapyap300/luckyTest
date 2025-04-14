@@ -130,8 +130,8 @@ public class UIManager : Singleton<UIManager>
         ShowStartPanel(false);
         
         // 게임 시작
-        GameManager.Instance.StartGame();
-        seedText.text = GameManager.Instance.seed;
+        seedText.text = inputSeed;
+        GameManager.Instance.StartGame();        
     }
 
     // 게임 재시작 버튼용 메서드

@@ -150,9 +150,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8761cd1cc608db479726b0e9f62d555, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  expandDuration: 1
   maxRadius: 40
-  initialRadius: 0.5
+  initialRadius: 0.1
+  waveDuration: 1
+  waveEffectDuration: 1
 --- !u!4 &46200472
 Transform:
   m_ObjectHideFlags: 0
@@ -563,7 +564,6 @@ GameObject:
   - component: {fileID: 345053499}
   - component: {fileID: 345053498}
   - component: {fileID: 345053497}
-  - component: {fileID: 345053500}
   m_Layer: 0
   m_Name: Tilemap(Floor)
   m_TagString: Untagged
@@ -692,20 +692,6 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
---- !u!114 &345053500
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 345053495}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ebd2335727c515e46b34e8397d030f12, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  tilemap: {fileID: 0}
-  colorChangeDuration: 0.5
 --- !u!1 &589848438
 GameObject:
   m_ObjectHideFlags: 0
@@ -1362,7 +1348,6 @@ GameObject:
   - component: {fileID: 1131326056}
   - component: {fileID: 1131326054}
   - component: {fileID: 1131326051}
-  - component: {fileID: 1131326057}
   m_Layer: 0
   m_Name: Tilemap(Wall)
   m_TagString: Untagged
@@ -1727,20 +1712,6 @@ CompositeCollider2D:
   m_OffsetDistance: 0.00005
   m_UseDelaunayMesh: 0
   m_CompositeGameObject: {fileID: 1131326049}
---- !u!114 &1131326057
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1131326049}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ebd2335727c515e46b34e8397d030f12, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  tilemap: {fileID: 0}
-  colorChangeDuration: 0.5
 --- !u!1 &1134365681
 GameObject:
   m_ObjectHideFlags: 0

@@ -11,6 +11,8 @@ public class GameManager : Singleton<GameManager>
     private float remainingTime;
     private bool isGameActive = false;
 
+    public bool IsGameActive => isGameActive;
+
     void Start()
     {
         // 초기화만 수행

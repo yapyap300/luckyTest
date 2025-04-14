@@ -56,6 +56,7 @@ public class TilemapDraw : MonoBehaviour
                     );
                     
                     // 룰 타일 배치
+                    tilemap.SetTileFlags(pos, TileFlags.None);
                     tilemap.SetTile(pos, ruleTile);
                 }
             }
