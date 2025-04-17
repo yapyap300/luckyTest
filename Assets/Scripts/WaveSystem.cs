@@ -83,21 +83,21 @@ public class WaveSystem : MonoBehaviour
             int currentRadiusInt = Mathf.CeilToInt(currentRadius);
             int previousRadiusInt = Mathf.CeilToInt(previousRadius);
             
-            // 이전 반경과 현재 반경 사이의 새로운 영역만 검사
-            for (int x = -currentRadiusInt; x <= currentRadiusInt; x++)
+            // 원 반경 내의 타일만 검사
+            for (int c = -currentRadiusInt; c <= currentRadiusInt; c++)
             {
-                for (int y = -currentRadiusInt; y <= currentRadiusInt; y++)
+                for (int r = -currentRadiusInt; r <= currentRadiusInt; r++)
                 {
                     // 이전 반경 내의 타일은 스킵
-                    if (Mathf.Abs(x) <= previousRadiusInt && Mathf.Abs(y) <= previousRadiusInt)
+                    if (c * c + r * r <= previousRadiusInt * previousRadiusInt)
                         continue;
                         
-                    Vector3Int checkPos = centerCell + new Vector3Int(x, y, 0);
-                    Vector3 tilePos = tilemap.GetCellCenterWorld(checkPos);
-                    
-                    float distance = Vector2.Distance(transform.position, tilePos);
-                    
-                    if (distance <= currentRadius)
+                    // 현재 반경 밖의 타일은 스킵
+                    if (c * c + r * r > currentRadiusInt * currentRadiusInt)
+                        continue;
+                        
+                    Vector3Int checkPos = centerCell + new Vector3Int(c, r, 0);
+                    if (tilemap.HasTile(checkPos))
                     {
                         HandleTileInteraction(tilemap, checkPos);
                     }
@@ -108,27 +108,25 @@ public class WaveSystem : MonoBehaviour
 
     private void HandleTileInteraction(Tilemap tilemap, Vector3Int tilePosition)
     {
-        TileBase tile = tilemap.GetTile(tilePosition);
-        if (tile != null)
+        // 이전 트윈이 있다면 재시작
+        if (activeTweens.ContainsKey(tilePosition))
         {
-            // 이전 트윈이 있다면 재시작
-            if (activeTweens.ContainsKey(tilePosition))
-            {
-                activeTweens[tilePosition].Restart();
-                return;
-            }
-            
-            // 즉시 하얀색으로 변경
-            tilemap.SetColor(tilePosition, WAVE_COLOR);
-            
-            // 천천히 검은색으로 복귀
-            activeTweens[tilePosition] = DOTween.To(
-                () => WAVE_COLOR,
-                color => tilemap.SetColor(tilePosition, color),
-                NORMAL_COLOR,
-                waveEffectDuration
-            ).SetEase(Ease.InQuad).OnComplete(() => activeTweens.Remove(tilePosition));
+            activeTweens[tilePosition].Restart();
+            return;
         }
+        
+        // 즉시 하얀색으로 변경
+        tilemap.SetColor(tilePosition, WAVE_COLOR);
+        
+        // 천천히 검은색으로 복귀
+        Tween restoreTween = DOTween.To(
+            () => WAVE_COLOR,
+            color =>tilemap.SetColor(tilePosition, color),
+            NORMAL_COLOR,
+            waveEffectDuration
+        ).SetEase(Ease.InQuad).OnComplete(() => activeTweens.Remove(tilePosition));
+        
+        activeTweens[tilePosition] = restoreTween;
     }
 
     private void OnExpandComplete()

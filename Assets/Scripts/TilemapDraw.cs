@@ -37,21 +37,21 @@ public class TilemapDraw : MonoBehaviour
         // 타일맵 초기화
         tilemap.ClearAllTiles();
         
-        int width = mapData.GetLength(0);
-        int height = mapData.GetLength(1);
+        int rows = mapData.GetLength(0);    // 행 (세로)
+        int columns = mapData.GetLength(1);  // 열 (가로)
         
         // 맵 데이터를 순회하며 타일 배치
-        for (int x = 0; x < width; x++)
+        for (int r = 0; r < rows; r++)
         {
-            for (int y = 0; y < height; y++)
+            for (int c = 0; c < columns; c++)
             {
                 // 현재 위치의 타일 타입이 이 타일맵의 타일 타입과 일치하는 경우에만 배치
-                if (mapData[x, y] == (int)tileType)
+                if (mapData[r, c] == (int)tileType)
                 {
                     // 월드 좌표 계산 (중앙 기준)
                     Vector3Int pos = new Vector3Int(
-                        x - width / 2 + offset.x, 
-                        y - height / 2 + offset.y, 
+                        c - columns / 2 + offset.x, 
+                        r - rows / 2 + offset.y,  // Bottom Left 기준이므로 반전 불필요
                         0
                     );
                     

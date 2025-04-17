@@ -1,5 +1,8 @@
+using System.Text;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using System.Collections;
+using System.Collections.Generic;
 
 // 타일 타입을 정의하는 enum
 public enum TileType
@@ -12,114 +15,102 @@ public enum TileType
 public class MakeMap : MonoBehaviour
 {
     [Header("맵 설정")]
-    public int width = 50;
-    public int height = 50;
-    public int borderSize = 1;
-
-    [Header("셀룰러 오토마타 설정")]
-    [Range(0, 100)]
-    public int fillPercent = 45;
-    public int smoothCount = 5;
-
-    [Range(0, 8)]
-    public int birthLimit = 4;
-    [Range(0, 8)]
-    public int deathLimit = 3;
-
-    // 맵 데이터 (TileType enum 값으로 저장)
+    [SerializeField] private int rows = 50;  // 행 (세로)
+    [SerializeField] private int columns = 50;  // 열 (가로)
+    [SerializeField] private int borderSize = 1;  // 가장자리 보장 크기
+    [SerializeField] private int smoothCount = 5;
+    [SerializeField] private int wallThreshold = 45;
+    [SerializeField] private int deathLimit = 4;
+    [SerializeField] private int birthLimit = 4;
+    
     private int[,] map;
-
-    // 맵 데이터를 외부에서 접근할 수 있도록 프로퍼티 추가
-    public int[,] MapData => map;
-
-    // 맵 생성 이벤트
-    public delegate void MapGeneratedEvent(int[,] mapData);
-    public event MapGeneratedEvent OnMapGenerated;
+    
+    public event System.Action<int[,]> OnMapGenerated;
     
     public void GenerateMap()
     {
-        map = new int[width, height];
-
+        map = new int[rows, columns];
         RandomFillMap();
-
+        
         for (int i = 0; i < smoothCount; i++)
         {
             SmoothMap();
         }
-
         // 맵 생성 완료 이벤트 발생
         OnMapGenerated?.Invoke(map);
     }
-
-    void RandomFillMap()
-    {
-        for (int x = 0; x < width; x++)
+    
+    private void RandomFillMap()
+    {        
+        for (int r = 0; r < rows; r++)
         {
-            for (int y = 0; y < height; y++)
+            for (int c = 0; c < columns; c++)
             {
-                // 테두리는 항상 벽으로 설정
-                if (x < borderSize || x >= width - borderSize || y < borderSize || y >= height - borderSize)
+                // 가장자리는 벽으로 설정
+                if (r < borderSize || r >= rows - borderSize || 
+                    c < borderSize || c >= columns - borderSize)
                 {
-                    map[x, y] = (int)TileType.Wall;
+                    map[r, c] = (int)TileType.Wall;
                 }
                 else
                 {
-                    map[x, y] = (Random.Range(0, 100) < fillPercent) ? (int)TileType.Wall : (int)TileType.Floor;
+                    map[r, c] = (Random.Range(0, 100) < wallThreshold) ? 
+                        (int)TileType.Wall : (int)TileType.Floor;
                 }
             }
         }
     }
-
-    void SmoothMap()
+    
+    private void SmoothMap()
     {
-        int[,] newMap = new int[width, height];
-
-        for (int x = 0; x < width; x++)
+        int[,] newMap = new int[rows, columns];
+        
+        for (int r = 0; r < rows; r++)
         {
-            for (int y = 0; y < height; y++)
+            for (int c = 0; c < columns; c++)
             {
-                // 테두리는 항상 벽으로 유지
-                if (x < borderSize || x >= width - borderSize || y < borderSize || y >= height - borderSize)
+                // 가장자리는 항상 벽으로 유지
+                if (r < borderSize || r >= rows - borderSize || 
+                    c < borderSize || c >= columns - borderSize)
                 {
-                    newMap[x, y] = (int)TileType.Wall;
+                    newMap[r, c] = (int)TileType.Wall;
                     continue;
                 }
 
-                int neighborWallCount = GetSurroundingWallCount(x, y);
-
+                int neighborWallCount = GetNeighborWallCount(r, c);
+                
                 // 셀룰러 오토마타 규칙 적용
-                if (map[x, y] == (int)TileType.Wall) // 현재 벽인 경우
+                if (map[r, c] == (int)TileType.Wall) // 현재 벽인 경우
                 {
-                    newMap[x, y] = (neighborWallCount < deathLimit) ? (int)TileType.Floor : (int)TileType.Wall;
+                    newMap[r, c] = (neighborWallCount < deathLimit) ? (int)TileType.Floor : (int)TileType.Wall;
                 }
                 else // 현재 바닥인 경우
                 {
-                    newMap[x, y] = (neighborWallCount > birthLimit) ? (int)TileType.Wall : (int)TileType.Floor;
+                    newMap[r, c] = (neighborWallCount > birthLimit) ? (int)TileType.Wall : (int)TileType.Floor;
                 }
             }
         }
-
+        
         map = newMap;
     }
-
-    int GetSurroundingWallCount(int gridX, int gridY)
+    
+    private int GetNeighborWallCount(int row, int col)
     {
         int wallCount = 0;
-
-        for (int neighborX = gridX - 1; neighborX <= gridX + 1; neighborX++)
+        
+        for (int r = -1; r <= 1; r++)
         {
-            for (int neighborY = gridY - 1; neighborY <= gridY + 1; neighborY++)
+            for (int c = -1; c <= 1; c++)
             {
-                // 자기 자신은 건너뛰기
-                if (neighborX == gridX && neighborY == gridY)
-                    continue;
-
-                // 맵 경계 확인
-                if (neighborX >= 0 && neighborX < width && neighborY >= 0 && neighborY < height)
+                if (r == 0 && c == 0) continue;
+                
+                int checkRow = row + r;
+                int checkCol = col + c;
+                
+                if (checkRow >= 0 && checkRow < rows && 
+                    checkCol >= 0 && checkCol < columns)
                 {
-                    // 벽인 경우에만 카운트
-                    if (map[neighborX, neighborY] == (int)TileType.Wall)
-                        wallCount++;
+                    wallCount += (map[checkRow, checkCol] == (int)TileType.Wall) ? 1 : 0;
                 }
                 else
                 {
@@ -128,7 +119,7 @@ public class MakeMap : MonoBehaviour
                 }
             }
         }
-
+        
         return wallCount;
     }
 
