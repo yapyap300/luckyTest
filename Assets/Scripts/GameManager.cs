@@ -21,21 +21,21 @@ public class GameManager : Singleton<GameManager>
         isGameActive = false;
     }
     
-    void Update()
-    {
-        if (isGameActive)
-        {
-            // 시간 감소
-            remainingTime -= Time.deltaTime;
-            UIManager.Instance.UpdateTimeUI(remainingTime);
+    // void Update()
+    // {
+    //     if (isGameActive)
+    //     {
+    //         // 시간 감소
+    //         remainingTime -= Time.deltaTime;
+    //         UIManager.Instance.UpdateTimeUI(remainingTime);
             
-            // 시간 종료 체크
-            if (remainingTime <= 0)
-            {
-                EndGame();
-            }
-        }
-    }
+    //         // 시간 종료 체크
+    //         if (remainingTime <= 0)
+    //         {
+    //             EndGame();
+    //         }
+    //     }
+    // }
     
     // 랜덤 시드 생성
     private void GenerateRandomSeed()

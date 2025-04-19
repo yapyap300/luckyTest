@@ -150,10 +150,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8761cd1cc608db479726b0e9f62d555, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxRadius: 40
-  initialRadius: 0.1
-  waveDuration: 1
-  waveEffectDuration: 10
+  maxRadius: 50
+  initialRadius: 0
+  waveDuration: 1.5
+  waveEffectDuration: 2
+  tilemaps:
+  - {fileID: 345053499}
+  - {fileID: 1131326053}
 --- !u!4 &46200472
 Transform:
   m_ObjectHideFlags: 0
@@ -670,7 +673,7 @@ Tilemap:
   m_TileColorArray: []
   m_TileObjectToInstantiateArray: []
   m_AnimationFrameRate: 1
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Origin: {x: 0, y: 0, z: 0}
   m_Size: {x: 0, y: 0, z: 1}
   m_TileAnchor: {x: 0.5, y: 0.5, z: 0}
@@ -1578,7 +1581,7 @@ Tilemap:
     m_Data: {r: -3.0031026e-28, g: -3.0031026e-28, b: -3.0031026e-28, a: -3.0031026e-28}
   m_TileObjectToInstantiateArray: []
   m_AnimationFrameRate: 1
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Origin: {x: -677, y: 0, z: 0}
   m_Size: {x: 677, y: 132, z: 1}
   m_TileAnchor: {x: 0.5, y: 0.5, z: 0}
@@ -2380,8 +2383,8 @@ SceneRoots:
   - {fileID: 1782577833}
   - {fileID: 158847661}
   - {fileID: 1162893504}
-  - {fileID: 46200472}
   - {fileID: 589848440}
   - {fileID: 1357570908}
   - {fileID: 1134365685}
   - {fileID: 1506336604}
+  - {fileID: 46200472}

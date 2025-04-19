@@ -22,7 +22,7 @@ public class WaveSystem : MonoBehaviour
     private Camera mainCamera;
     private float currentRadius = 0f;
     private float previousRadius = 0f;
-    private Tilemap[] tilemaps;
+    [SerializeField]private Tilemap[] tilemaps;
     private Dictionary<Vector3Int, Tween> activeTweens = new Dictionary<Vector3Int, Tween>();
     private CircleCollider2D waveCollider;
 
@@ -31,7 +31,7 @@ public class WaveSystem : MonoBehaviour
         originalScale = transform.localScale;
         transform.localScale = originalScale * initialRadius;
         mainCamera = Camera.main;
-        tilemaps = FindObjectsByType<Tilemap>(FindObjectsSortMode.None);
+        //tilemaps = FindObjectsByType<Tilemap>(FindObjectsSortMode.None);
         waveCollider = GetComponent<CircleCollider2D>();
     }
 
@@ -63,22 +63,33 @@ public class WaveSystem : MonoBehaviour
         // Collider 활성화
         waveCollider.enabled = true;
         
-        currentTween = transform.DOScale(maxRadius, waveDuration)
+        currentTween = transform.DOScale(originalScale * maxRadius, waveDuration)
             .SetEase(Ease.Linear)
-            .OnUpdate(() => {
-                currentRadius = transform.localScale.x * 0.5f;
-                CheckNewTiles();
-                previousRadius = currentRadius;
-            })
             .OnComplete(() => {
                 OnExpandComplete();
             });
+            
+        // 타일 확인 코루틴 시작
+        StartCoroutine(CheckTilesCoroutine());
+    }
+    
+    private IEnumerator CheckTilesCoroutine()
+    {
+        float checkInterval = waveDuration * 0.1f; // waveDuration의 10% 간격으로 확인
+        
+        while (isExpanding)
+        {
+            currentRadius = transform.localScale.x * 0.5f;
+            CheckNewTiles();
+            previousRadius = currentRadius;
+            yield return new WaitForSeconds(checkInterval);
+        }
     }
 
     private void CheckNewTiles()
     {
         foreach (Tilemap tilemap in tilemaps)
-        {
+        {            
             Vector3Int centerCell = tilemap.WorldToCell(transform.position);
             int currentRadiusInt = Mathf.CeilToInt(currentRadius);
             int previousRadiusInt = Mathf.CeilToInt(previousRadius);
@@ -108,25 +119,24 @@ public class WaveSystem : MonoBehaviour
 
     private void HandleTileInteraction(Tilemap tilemap, Vector3Int tilePosition)
     {
+        Debug.Log(tilemap.gameObject.name + "위치:" + tilePosition);
         // 이전 트윈이 있다면 재시작
         if (activeTweens.ContainsKey(tilePosition))
         {
             activeTweens[tilePosition].Restart();
             return;
         }
-        
         // 즉시 하얀색으로 변경
-        tilemap.SetColor(tilePosition, WAVE_COLOR);
-        
+        tilemap.SetColor(tilePosition,WAVE_COLOR);
         // 천천히 검은색으로 복귀
-        Tween restoreTween = DOTween.To(
+        /*Tween restoreTween = DOTween.To(
             () => WAVE_COLOR,
             color =>tilemap.SetColor(tilePosition, color),
             NORMAL_COLOR,
             waveEffectDuration
         ).SetEase(Ease.InQuad).OnComplete(() => activeTweens.Remove(tilePosition));
         
-        activeTweens[tilePosition] = restoreTween;
+        activeTweens[tilePosition] = restoreTween;*/
     }
 
     private void OnExpandComplete()
