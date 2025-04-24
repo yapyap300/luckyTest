@@ -36,6 +36,10 @@ public class MakeMap : MonoBehaviour
         {
             SmoothMap();
         }
+
+        // 아이템 매니저 초기화
+        ItemManager.Instance.Initialize(map);
+        
         // 맵 생성 완료 이벤트 발생
         OnMapGenerated?.Invoke(map);
     }

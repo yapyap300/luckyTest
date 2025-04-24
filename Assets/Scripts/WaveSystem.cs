@@ -10,6 +10,7 @@ public class WaveSystem : MonoBehaviour
     [SerializeField] private float maxRadius;
     [SerializeField] private float initialRadius;
     [SerializeField] private float waveDuration;
+    [SerializeField] private float fadeDuration;
 
     // 색상 상수 정의
     private static readonly Color NORMAL_COLOR = new(0,0,0,1);
@@ -75,7 +76,8 @@ public class WaveSystem : MonoBehaviour
     private IEnumerator CheckTilesCoroutine()
     {
         HandleTileInteraction(tilemap.WorldToCell(transform.position));
-        float checkInterval = waveDuration * 0.1f; // waveDuration의 10% 간격으로 확인
+        
+        float checkInterval = waveDuration * 0.1f;
 
         while (isExpanding)
         {
@@ -92,17 +94,18 @@ public class WaveSystem : MonoBehaviour
         int currentRadiusInt = Mathf.CeilToInt(currentRadius);
         int previousRadiusInt = Mathf.CeilToInt(previousRadius);
 
-        // 원 반경 내의 타일만 검사
         for (int c = -currentRadiusInt; c <= currentRadiusInt; c++)
         {
             for (int r = -currentRadiusInt; r <= currentRadiusInt; r++)
             {
+                float distance = Mathf.Sqrt(c * c + r * r);
+                
                 // 이전 반경 내의 타일은 스킵
-                if (c * c + r * r <= previousRadiusInt * previousRadiusInt)
+                if (distance <= previousRadiusInt)
                     continue;
 
                 // 현재 반경 밖의 타일은 스킵
-                if (c * c + r * r > currentRadiusInt * currentRadiusInt)
+                if (distance > currentRadiusInt)
                     continue;
 
                 Vector3Int checkPos = centerCell + new Vector3Int(c, r, 0);
@@ -112,28 +115,22 @@ public class WaveSystem : MonoBehaviour
                 }
             }
         }
-
     }
 
     private void HandleTileInteraction(Vector3Int tilePosition)
     {
-        // 이전 트윈이 있다면 재시작
         if (activeTweens.ContainsKey(tilePosition))
         {
-            activeTweens[tilePosition].Restart();
-            return;
+            activeTweens[tilePosition].Kill();
+            activeTweens.Remove(tilePosition);
         }
-        // 즉시 하얀색으로 변경
-        tilemap.SetTileFlags(tilePosition, TileFlags.None);
-        tilemap.SetColor(tilePosition, WAVE_COLOR);       
-        // 천천히 검은색으로 복귀
         Tween restoreTween = DOTween.To(
             () => WAVE_COLOR,
-            color =>tilemap.SetColor(tilePosition, color),
+            color => tilemap.SetColor(tilePosition, color),
             NORMAL_COLOR,
-            waveDuration * 0.1f
+            waveDuration * fadeDuration
         ).SetEase(Ease.InQuad).OnComplete(() => activeTweens.Remove(tilePosition));
-        
+
         activeTweens[tilePosition] = restoreTween;
     }
 

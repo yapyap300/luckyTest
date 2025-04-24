@@ -1,18 +1,93 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private MakeMap makeMap;
 
     private Rigidbody2D rb;
     private Vector2 moveInput;
+    private int[,] map;
 
-    private void Awake()
+    private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        makeMap = FindFirstObjectByType<MakeMap>();
+        makeMap.OnMapGenerated += OnMapGenerated;
+    }
+
+    private void OnMapGenerated(int[,] generatedMap)
+    {
+        map = generatedMap;
+        CheckAndFixStartPosition();
+    }
+
+    private void CheckAndFixStartPosition()
+    {
+        int centerRow = map.GetLength(0) / 2;
+        int centerCol = map.GetLength(1) / 2;
+
+        // 중앙 위치가 벽인지 확인
+        if (map[centerRow, centerCol] == (int)TileType.Wall)
+        {
+            // BFS로 가장 가까운 빈 공간 찾기
+            var (row, col) = FindNearestEmptyCell(centerRow, centerCol);
+            transform.position = new Vector3(col, row, 0);
+        }
+    }
+
+    private (int row, int col) FindNearestEmptyCell(int startRow, int startCol)
+    {
+        int rows = map.GetLength(0);
+        int cols = map.GetLength(1);
+        bool[,] visited = new bool[rows, cols];
+        Queue<(int row, int col)> queue = new Queue<(int row, int col)>();
+        
+        // 시작 위치를 큐에 추가
+        queue.Enqueue((startRow, startCol));
+        visited[startRow, startCol] = true;
+
+        // 상하좌우 이동을 위한 방향 벡터
+        (int row, int col)[] directions = new[]
+        {
+            (-1, 0), // 상
+            (1, 0),  // 하
+            (0, -1), // 좌
+            (0, 1)   // 우
+        };
+
+        while (queue.Count > 0)
+        {
+            var (currentRow, currentCol) = queue.Dequeue();
+            
+            // 현재 위치가 빈 공간이면 반환
+            if (map[currentRow, currentCol] == (int)TileType.Floor)
+            {
+                return (currentRow, currentCol);
+            }
+
+            // 상하좌우 탐색
+            foreach (var (dr, dc) in directions)
+            {
+                int nextRow = currentRow + dr;
+                int nextCol = currentCol + dc;
+
+                // 맵 범위 체크 및 방문 여부 확인
+                if (nextRow >= 0 && nextRow < rows && 
+                    nextCol >= 0 && nextCol < cols && 
+                    !visited[nextRow, nextCol])
+                {
+                    queue.Enqueue((nextRow, nextCol));
+                    visited[nextRow, nextCol] = true;
+                }
+            }
+        }
+
+        return (startRow, startCol);
     }
 
     private void FixedUpdate()
@@ -27,5 +102,13 @@ public class PlayerController : MonoBehaviour
     public void OnMove(InputAction.CallbackContext context)
     {
         moveInput = context.ReadValue<Vector2>();
+    }
+
+    private void OnDestroy()
+    {
+        if (makeMap != null)
+        {
+            makeMap.OnMapGenerated -= OnMapGenerated;
+        }
     }
 } 
