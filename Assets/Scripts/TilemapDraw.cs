@@ -13,26 +13,40 @@ public class TilemapDraw : MonoBehaviour
     [Header("오프셋 설정")]
     public Vector2Int offset = Vector2Int.zero;
     
-    private MakeMap mapGenerator;
-    
     private void Start()
     {
         tilemap = GetComponent<Tilemap>();
-        // 맵 생성기 찾기
-        mapGenerator = FindFirstObjectByType<MakeMap>();
-        
-        if (mapGenerator == null)
-        {
-            Debug.LogError("맵 생성기(MakeMap)를 찾을 수 없습니다.");
-            return;
-        }
         
         // 맵 생성 이벤트 구독
-        mapGenerator.OnMapGenerated += RenderTiles;
+        MapManager.Instance.OnMapGenerated += RenderTiles;
+        
+        // 게임 재시작 이벤트 구독
+        GameManager.Instance.OnGameRestart += OnGameRestart;
+    }
+
+    private void OnDestroy()
+    {
+        // 이벤트 구독 해제
+        if (MapManager.Instance != null)
+        {
+            MapManager.Instance.OnMapGenerated -= RenderTiles;
+        }
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnGameRestart -= OnGameRestart;
+        }
+    }
+
+    private void OnGameRestart()
+    {
+        if (tilemap != null)
+        {
+            tilemap.ClearAllTiles();
+        }
     }
     
     // 맵 데이터를 기반으로 타일 배치
-    public void RenderTiles(int[,] mapData)
+    public virtual void RenderTiles(int[,] mapData)
     {        
         
         int rows = mapData.GetLength(0);    // 행 (세로)

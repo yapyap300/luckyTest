@@ -12,7 +12,7 @@ public enum TileType
     Item = 2     // 아이템 배치 위치
 }
 
-public class MakeMap : MonoBehaviour
+public class MapManager : Singleton<MapManager>
 {
     [Header("맵 설정")]
     [SerializeField] private int rows = 50;  // 행 (세로)
@@ -26,6 +26,19 @@ public class MakeMap : MonoBehaviour
     private int[,] map;
     
     public event System.Action<int[,]> OnMapGenerated;
+    
+    private void Start()
+    {
+        // 게임 재시작 이벤트 구독
+        GameManager.Instance.OnGameRestart += OnGameRestart;
+    }
+
+    private void OnGameRestart()
+    {
+        // 맵 데이터 초기화
+        map = null;
+        
+    }
     
     public void GenerateMap()
     {

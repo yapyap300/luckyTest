@@ -7,45 +7,41 @@ public class PlayerController : MonoBehaviour
 {
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private MakeMap makeMap;
 
     private Rigidbody2D rb;
     private Vector2 moveInput;
-    private int[,] map;
 
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        makeMap = FindFirstObjectByType<MakeMap>();
-        makeMap.OnMapGenerated += OnMapGenerated;
+        MapManager.Instance.OnMapGenerated += OnMapGenerated;
     }
 
-    private void OnMapGenerated(int[,] generatedMap)
+    private void OnMapGenerated(int[,] mapData)
     {
-        map = generatedMap;
-        CheckAndFixStartPosition();
+        CheckAndFixStartPosition(mapData);
     }
 
-    private void CheckAndFixStartPosition()
+    private void CheckAndFixStartPosition(int[,] mapData)
     {
-        int centerRow = map.GetLength(0) / 2;
-        int centerCol = map.GetLength(1) / 2;
+        int centerRow = mapData.GetLength(0) / 2;
+        int centerCol = mapData.GetLength(1) / 2;
 
         // 중앙 위치가 벽인지 확인
-        if (map[centerRow, centerCol] == (int)TileType.Wall)
+        if (mapData[centerRow, centerCol] == (int)TileType.Wall)
         {
             // BFS로 가장 가까운 빈 공간 찾기
-            var (row, col) = FindNearestEmptyCell(centerRow, centerCol);
-            transform.position = new Vector3(col, row, 0);
+            var (row, col) = FindNearestEmptyCell(centerRow, centerCol, mapData);
+            transform.position = new Vector3(col - centerCol + 0.5f,  row - centerRow + 0.5f, 0);
         }
     }
 
-    private (int row, int col) FindNearestEmptyCell(int startRow, int startCol)
+    private (int row, int col) FindNearestEmptyCell(int startRow, int startCol, int[,] mapData)
     {
-        int rows = map.GetLength(0);
-        int cols = map.GetLength(1);
+        int rows = mapData.GetLength(0);
+        int cols = mapData.GetLength(1);
         bool[,] visited = new bool[rows, cols];
-        Queue<(int row, int col)> queue = new Queue<(int row, int col)>();
+        Queue<(int, int)> queue = new Queue<(int, int)>();
         
         // 시작 위치를 큐에 추가
         queue.Enqueue((startRow, startCol));
@@ -65,7 +61,7 @@ public class PlayerController : MonoBehaviour
             var (currentRow, currentCol) = queue.Dequeue();
             
             // 현재 위치가 빈 공간이면 반환
-            if (map[currentRow, currentCol] == (int)TileType.Floor)
+            if (mapData[currentRow, currentCol] == (int)TileType.Floor)
             {
                 return (currentRow, currentCol);
             }
@@ -102,13 +98,5 @@ public class PlayerController : MonoBehaviour
     public void OnMove(InputAction.CallbackContext context)
     {
         moveInput = context.ReadValue<Vector2>();
-    }
-
-    private void OnDestroy()
-    {
-        if (makeMap != null)
-        {
-            makeMap.OnMapGenerated -= OnMapGenerated;
-        }
     }
 } 

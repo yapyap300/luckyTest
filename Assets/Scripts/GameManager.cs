@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class GameManager : Singleton<GameManager>
 {
@@ -6,18 +7,12 @@ public class GameManager : Singleton<GameManager>
     
     [Header("랜덤 시드 설정")]
     public string seed;
-    
-    private int currentScore = 0;
-    private float remainingTime;
-    private bool isGameActive = false;
-
-    public bool IsGameActive => isGameActive;
+    private List<ItemBox> collectedItems = new List<ItemBox>();
+    public bool IsGameActive { get; private set; }
+    public event System.Action OnGameRestart;
     void Start()
-    {
-        // 초기화만 수행
-        currentScore = 0;
-        remainingTime = gameTime;
-        isGameActive = false;
+    {        
+        IsGameActive = false;
     }
     
     // void Update()
@@ -61,27 +56,39 @@ public class GameManager : Singleton<GameManager>
         Random.InitState(seed.GetHashCode());
         
         // 게임 초기화
-        currentScore = 0;
-        remainingTime = gameTime;
-        isGameActive = true;
+        IsGameActive = true;
+        collectedItems.Clear();
         
         // UI 초기화
-        UIManager.Instance.UpdateScoreUI(currentScore);
-        UIManager.Instance.UpdateTimeUI(remainingTime);
-        UIManager.Instance.ShowGameUI(true);
+        UIManager.Instance.ShowUI(UIState.Game);
+        UIManager.Instance.ShowUI(UIState.Game);
+        UIManager.Instance.ShowUI(UIState.Game);
     }
     
     public void EndGame()
     {
-        isGameActive = false;
+        IsGameActive = false;
         
         // 결과 화면 표시
-        UIManager.Instance.ShowGameOverUI(currentScore);
+        UIManager.Instance.ShowUI(UIState.GameOver);
     }
-    
-    public void AddScore(int points)
+
+    public void AddItem(ItemBox item)
     {
-        currentScore += points;
-        UIManager.Instance.UpdateScoreUI(currentScore);
+        if (item != null)
+        {
+            collectedItems.Add(item);
+        }
+    }
+
+    public void RestartGame()
+    {
+        // 게임 상태 초기화
+        IsGameActive = false;
+        seed = string.Empty;
+        collectedItems.Clear();
+        OnGameRestart?.Invoke();
+
+        UIManager.Instance.ShowUI(UIState.Start);
     }
 }
