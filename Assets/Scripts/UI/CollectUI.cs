@@ -4,8 +4,13 @@ public class CollectUI : BaseUI
 {
     public override UIState State => UIState.Collect;
 
-    public void SetPosition(Vector3 worldPosition)
+    protected override void Cleanup()
     {
-        transform.position = Camera.main.WorldToScreenPoint(worldPosition);
+        
+    }
+
+    protected override void Initialize()
+    {
+        
     }
 } 

@@ -24,19 +24,6 @@ public class TilemapDraw : MonoBehaviour
         GameManager.Instance.OnGameRestart += OnGameRestart;
     }
 
-    private void OnDestroy()
-    {
-        // 이벤트 구독 해제
-        if (MapManager.Instance != null)
-        {
-            MapManager.Instance.OnMapGenerated -= RenderTiles;
-        }
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.OnGameRestart -= OnGameRestart;
-        }
-    }
-
     private void OnGameRestart()
     {
         if (tilemap != null)

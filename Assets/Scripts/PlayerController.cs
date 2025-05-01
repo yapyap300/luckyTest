@@ -8,6 +8,7 @@ public class PlayerController : MonoBehaviour
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 5f;
 
+    private ItemBox interactableItem;
     private Rigidbody2D rb;
     private Vector2 moveInput;
 
@@ -85,7 +86,20 @@ public class PlayerController : MonoBehaviour
 
         return (startRow, startCol);
     }
-
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Item"))
+        {
+            interactableItem = collision.gameObject.GetComponent<ItemBox>();
+        }
+    }
+    void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Item"))
+        {
+            interactableItem = null;
+        }
+    }
     private void FixedUpdate()
     {
         // 게임이 시작되지 않았다면 움직임 무시
@@ -98,5 +112,12 @@ public class PlayerController : MonoBehaviour
     public void OnMove(InputAction.CallbackContext context)
     {
         moveInput = context.ReadValue<Vector2>();
+    }
+    public void OnInteract()
+    {
+        if (interactableItem != null)
+        {
+            interactableItem.Collect();
+        }
     }
 } 

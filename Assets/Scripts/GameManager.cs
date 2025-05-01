@@ -4,12 +4,16 @@ using System.Collections.Generic;
 public class GameManager : Singleton<GameManager>
 {
     public float gameTime = 120f; // 2분
-    
+    public int score = 0;
     [Header("랜덤 시드 설정")]
     public string seed;
     private List<ItemBox> collectedItems = new List<ItemBox>();
     public bool IsGameActive { get; private set; }
     public event System.Action OnGameRestart;
+
+    [SerializeField] private ItemData itemData;
+
+
     void Start()
     {        
         IsGameActive = false;
@@ -59,10 +63,7 @@ public class GameManager : Singleton<GameManager>
         IsGameActive = true;
         collectedItems.Clear();
         
-        // UI 초기화
-        UIManager.Instance.ShowUI(UIState.Game);
-        UIManager.Instance.ShowUI(UIState.Game);
-        UIManager.Instance.ShowUI(UIState.Game);
+        UIManager.Instance.HideUI(UIState.Start);
     }
     
     public void EndGame()
@@ -90,5 +91,39 @@ public class GameManager : Singleton<GameManager>
         OnGameRestart?.Invoke();
 
         UIManager.Instance.ShowUI(UIState.Start);
+    }
+
+    public ItemData.ItemDrop GetRandomItemByRarity(ItemRarity rarity)
+    {
+        List<ItemData.ItemDrop> targetItems = rarity switch
+        {
+            ItemRarity.Common => itemData.commonItems,
+            ItemRarity.Rare => itemData.rareItems,
+            ItemRarity.Epic => itemData.epicItems,
+            ItemRarity.Legendary => itemData.legendaryItems,
+            _ => itemData.commonItems
+        };
+
+        return GetRandomItemByWeight(targetItems);
+    }
+
+    private ItemData.ItemDrop GetRandomItemByWeight(List<ItemData.ItemDrop> items)
+    {
+        float totalWeight = 0f;
+        foreach (var item in items)
+        {
+            totalWeight += item.weight;
+        }
+
+        float randomPoint = Random.value * totalWeight;
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (randomPoint < items[i].weight)
+            {
+                return items[i];
+            }
+            randomPoint -= items[i].weight;
+        }
+        return items[items.Count - 1];
     }
 }

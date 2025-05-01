@@ -25,7 +25,6 @@ public class StartUI : BaseUI
             seedInputField.placeholder.GetComponent<Text>().text = $"시드값을 입력하세요 ({seedLength}자리)";
         }
     }
-
     private bool IsValidSeed(string seed)
     {
         if (string.IsNullOrEmpty(seed)) return true;
@@ -62,12 +61,26 @@ public class StartUI : BaseUI
         seedText.text = GameManager.Instance.seed;
     }
 
-    public void ResetInput()
+    private void ResetInput()
     {
         if (seedInputField != null)
         {
             seedInputField.text = "";
             seedInputField.placeholder.GetComponent<Text>().text = $"시드값을 입력하세요 ({seedLength}자리)";
         }
+        if(seedText != null)
+        {
+            seedText.text = "";
+        }
+    }
+
+    protected override void Initialize()
+    {
+        ResetInput();
+    }
+
+    protected override void Cleanup()
+    {
+
     }
 } 

@@ -6,8 +6,6 @@ public class GameUI : BaseUI
     [SerializeField] private Text scoreText;
     [SerializeField] private Text timeText;
 
-    public override UIState State => UIState.Game;
-
     public void UpdateScore(int score)
     {
         if (scoreText != null)
@@ -25,4 +23,17 @@ public class GameUI : BaseUI
             timeText.text = $"{minutes:00}:{seconds:00}";
         }
     }
+
+    protected override void Initialize()
+    {
+        UpdateScore(0);
+        UpdateTime(0);
+    }
+
+    protected override void Cleanup()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public override UIState State => UIState.Game;
 } 

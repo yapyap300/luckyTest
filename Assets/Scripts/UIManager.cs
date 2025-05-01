@@ -1,9 +1,9 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 public enum UIState
 {
-    None,
     Game,
     GameOver,
     Start,
@@ -12,9 +12,7 @@ public enum UIState
 
 public class UIManager : Singleton<UIManager>
 {
-    private UIState currentState = UIState.None;
     private Dictionary<UIState, BaseUI> uiPanels = new Dictionary<UIState, BaseUI>();
-    private Stack<UIState> uiStack = new Stack<UIState>();
 
     private void Start()
     {
@@ -40,38 +38,25 @@ public class UIManager : Singleton<UIManager>
 
     public void ShowUI(UIState state)
     {
-        if (currentState != UIState.None)
-        {
-            uiPanels[currentState].gameObject.SetActive(false);
-        }
-        
-        currentState = state;
-        if (state != UIState.None)
+        if (uiPanels.ContainsKey(state))
         {
             uiPanels[state].gameObject.SetActive(true);
         }
     }
-
-    public void PushUI(UIState state)
+    public void ShowUI(UIState state, Vector3 worldPosition)
     {
-        if (currentState != UIState.None)
+        if (uiPanels.ContainsKey(state))
         {
-            uiPanels[currentState].gameObject.SetActive(false);
-        }
-        uiStack.Push(currentState);
-        ShowUI(state);
-    }
-
-    public void PopUI()
-    {
-        if (uiStack.Count > 0)
-        {
-            if (currentState != UIState.None)
-            {
-                uiPanels[currentState].gameObject.SetActive(false);
-            }
-            ShowUI(uiStack.Pop());
-            if(uiStack.Count == 0) currentState = UIState.None;
+            uiPanels[state].transform.position = Camera.main.WorldToScreenPoint(worldPosition);
+            uiPanels[state].gameObject.SetActive(true);
         }
     }
-} 
+    public void HideUI(UIState state)
+    {
+        if (uiPanels.ContainsKey(state))
+        {
+            uiPanels[state].gameObject.SetActive(false);
+        }
+    }
+
+}

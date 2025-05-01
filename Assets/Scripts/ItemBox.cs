@@ -11,25 +11,13 @@ public class ItemBox : MonoBehaviour, IPoolObject
     private Coroutine collectibleCoroutine;
 
     public ItemRarity Rarity { get; private set; }
-    public int ScoreValue => GetScoreByRarity(Rarity);
     public bool IsCollectible { get; private set; }
+    private bool isPlayerColliding = false;
 
     public void Initialize(ItemRarity rarity)
     {
         Rarity = rarity;
         IsCollectible = false;
-    }
-
-    private int GetScoreByRarity(ItemRarity rarity)
-    {
-        return rarity switch
-        {
-            ItemRarity.Common => 10,
-            ItemRarity.Rare => 30,
-            ItemRarity.Epic => 100,
-            ItemRarity.Legendary => 300,
-            _ => 10
-        };
     }
 
     public void OnCreatedInPool()
@@ -72,7 +60,8 @@ public class ItemBox : MonoBehaviour, IPoolObject
     {
         if (collision.gameObject.CompareTag("Player") && IsCollectible)
         {
-            UIManager.Instance.ShowUI(UIState.Collect);
+            isPlayerColliding = true;
+            UIManager.Instance.ShowUI(UIState.Collect, transform.position);
         }
     }
 
@@ -80,7 +69,8 @@ public class ItemBox : MonoBehaviour, IPoolObject
     {
         if (collision.gameObject.CompareTag("Player"))
         {
-            UIManager.Instance.PopUI();
+            isPlayerColliding = false;
+            UIManager.Instance.HideUI(UIState.Collect);
         }
     }
 
@@ -89,16 +79,16 @@ public class ItemBox : MonoBehaviour, IPoolObject
         IsCollectible = true;
         yield return new WaitForSeconds(collectibleDuration);
         IsCollectible = false;
-        UIManager.Instance.PopUI();
+        UIManager.Instance.HideUI(UIState.Collect);
     }
 
     public void Collect()
     {
-        if (IsCollectible)
+        if (IsCollectible && isPlayerColliding)
         {
             GameManager.Instance.AddItem(this);
             gameObject.SetActive(false);
-            UIManager.Instance.PopUI();
+            UIManager.Instance.HideUI(UIState.Collect);
         }
     }
 } 

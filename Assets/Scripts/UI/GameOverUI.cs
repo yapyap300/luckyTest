@@ -7,11 +7,16 @@ public class GameOverUI : BaseUI
 
     public override UIState State => UIState.GameOver;
 
-    public void SetFinalScore(int score)
+    protected override void Cleanup()
     {
         if (finalScoreText != null)
         {
-            finalScoreText.text = $"Final Score: {score}";
+            finalScoreText.text = $"Final Score: {GameManager.Instance.score}";
         }
+    }
+
+    protected override void Initialize()
+    {
+        throw new System.NotImplementedException();
     }
 } 
